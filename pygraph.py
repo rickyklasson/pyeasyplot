@@ -36,19 +36,29 @@ plt.figure(figsize=(16, 9))
 def main(args):
     # Handle --input and --header. Import data and store in pandas dataframe.
     df = pd.read_csv(args.input, sep=' ', header=('infer' if args.header else None))
+    print("------ RAW DATAFRAME ------")
     print(df)
+
+    # Handle --filter. Filter data on column and filter value.
+    if args.filter:
+        filter_idx = int(args.filter[0])
+        filter_value = args.filter[1]
+        
+        # Do the filtering.
+        df = df.loc[df.iloc[:, filter_idx] == filter_value]
 
     # Handle --columns. Filter data on list of columns.
     if args.columns:
         df = df.iloc[:,args.columns]
-
+    
+    print("------ FILTERED DATAFRAME ------")
     print(df)
 
     # Create plot and plot all columns.
     nbr_columns = df.shape[1]
     nbr_rows = df.shape[0]
     for col in range(0, nbr_columns):
-        plt.scatter(range(nbr_rows), df.iloc[:,col])
+        plt.scatter(range(nbr_rows), df.iloc[:,col], s=3, alpha=0.4)
 
     # Handle --show. Show plot.
     if args.show:
@@ -65,7 +75,8 @@ if __name__ == "__main__":
     # Required positional argument
     parser.add_argument("-i", "--input", type=str, required=True)
 
-    parser.add_argument("-f", "--filter", help="Filter out rows based on the argument.")
+    parser.add_argument("-f", "--filter", type=str, nargs=2, help="Filter out rows based on a column and a value. E.g."
+            + " : --filter 1 P filters out rows where column 1 has the value P.", metavar=('COLUMN', 'FILTER_VAL'))
     parser.add_argument("-c","--columns", type=int, nargs='+', help="Plot only selected columns.", default=[])
 
     parser.add_argument("-o", "--output", type=str, help="Save plot in specified output file.")
