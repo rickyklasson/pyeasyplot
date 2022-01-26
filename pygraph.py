@@ -7,7 +7,6 @@ import pandas as pd
 # Avoid display output issue when running over ssh.
 matplotlib.use('Agg')
 
-
 """
     Wishlist for plotting features:
     - Simple command line command for creating and saving a plot.
@@ -35,21 +34,30 @@ plt.style.use('ggplot')
 plt.figure(figsize=(16, 9))
 
 def main(args):
-    # Handle --input. Import data and store in pandas dataframe.
-    df = pd.read_csv(args.input, sep=' ', header=None)
+    # Handle --input and --header. Import data and store in pandas dataframe.
+    df = pd.read_csv(args.input, sep=' ', header=('infer' if args.header else None))
+    print(df)
 
-    # Handle --columns. Filter data if list of columns to plot is given.
+    # Handle --columns. Filter data on list of columns.
     if args.columns:
-        df = df.filter(items=args.columns, axis=1)
+        df = df.iloc[:,args.columns]
+
+    print(df)
 
     # Create plot and plot all columns.
     nbr_columns = df.shape[1]
     nbr_rows = df.shape[0]
     for col in range(0, nbr_columns):
-        plt.scatter(df.iloc[:,col], range(nbr_rows))
+        plt.scatter(range(nbr_rows), df.iloc[:,col])
 
-    plt.savefig('test.png', dpi=300)
-
+    # Handle --show. Show plot.
+    if args.show:
+        print("Showing")
+        plt.show()
+    
+    # Handle --output. Save figure in output file.
+    if args.output:
+        plt.savefig(args.output, dpi=300)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Flexible command line tool for plotting. Uses matplotlib.")
@@ -57,10 +65,12 @@ if __name__ == "__main__":
     # Required positional argument
     parser.add_argument("-i", "--input", type=str, required=True)
 
-    parser.add_argument("-f", "--filter", help="Filter on a specified column, column indexing starts at 0.")
-    parser.add_argument("-c","--columns", type=int, nargs='+', help='Plot only selected columns.', default=[])
+    parser.add_argument("-f", "--filter", help="Filter out rows based on the argument.")
+    parser.add_argument("-c","--columns", type=int, nargs='+', help="Plot only selected columns.", default=[])
 
-    parser.add_argument("-s", "--save", help="Save plots. Will use header of columns as filename.")
+    parser.add_argument("-o", "--output", type=str, help="Save plot in specified output file.")
+    parser.add_argument("-s", "--show", help="Show plot after creation.", action='store_true')
+    parser.add_argument("-he", "--header", help="Use this is data has header row", action='store_true')
 
     args = parser.parse_args()
     main(args)
