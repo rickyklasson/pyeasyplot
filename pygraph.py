@@ -36,7 +36,7 @@ plt.figure(figsize=(16, 9))
 def main(args):
     # Handle --input and --header. Import data and store in pandas dataframe.
     df = pd.read_csv(args.input, sep=' ', header=('infer' if args.header else None))
-    print("------ RAW DATAFRAME ------")
+    print("------ RAW DATAFRAME ------\n")
     print(df)
 
     # Handle --filter. Filter data on column and filter value.
@@ -51,18 +51,32 @@ def main(args):
     if args.columns:
         df = df.iloc[:,args.columns]
     
-    print("------ FILTERED DATAFRAME ------")
+    print("\n\n------ FILTERED DATAFRAME ------\n")
     print(df)
+
+    # Handle --preview. Only previewing data.
+    if args.preview:
+        return
 
     # Create plot and plot all columns.
     nbr_columns = df.shape[1]
-    nbr_rows = df.shape[0]
+    x_axis = df.index
     for col in range(0, nbr_columns):
-        plt.scatter(range(nbr_rows), df.iloc[:,col], s=3, alpha=0.4)
+        # Handle --graph-type, scatter or line.
+        if args.graph_type == 'line':
+            plt.plot(x_axis, df.iloc[:,col], alpha=1)
+        else:
+            # Default to scatter plot.
+            plt.scatter(x_axis, df.iloc[:,col], s=4, alpha=1)
+
+    # Handle --xlabel, --ylabel and --title. Setup legends and labels.
+    plt.legend(list(df))
+    plt.xlabel(args.xlabel)
+    plt.ylabel(args.ylabel)
+    plt.title(args.title)
 
     # Handle --show. Show plot.
     if args.show:
-        print("Showing")
         plt.show()
     
     # Handle --output. Save figure in output file.
@@ -73,7 +87,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Flexible command line tool for plotting. Uses matplotlib.")
 
     # Required positional argument
-    parser.add_argument("-i", "--input", type=str, required=True)
+    parser.add_argument("-i", "--input", type=str, required=True, help="Input data for plot. Should be space-separated columns of data. See -he for info on headers.")
 
     parser.add_argument("-f", "--filter", type=str, nargs=2, help="Filter out rows based on a column and a value. E.g."
             + " : --filter 1 P filters out rows where column 1 has the value P.", metavar=('COLUMN', 'FILTER_VAL'))
@@ -81,7 +95,12 @@ if __name__ == "__main__":
 
     parser.add_argument("-o", "--output", type=str, help="Save plot in specified output file.")
     parser.add_argument("-s", "--show", help="Show plot after creation.", action='store_true')
+    parser.add_argument("-p", "--preview", help="Preview data in dataframe. Will not save nor show if set.", action='store_true')
     parser.add_argument("-he", "--header", help="Use this is data has header row", action='store_true')
+    parser.add_argument("-x", "--xlabel", type=str, help="X-axis label")
+    parser.add_argument("-y", "--ylabel", type=str, help="Y-axis label")
+    parser.add_argument("-t", "--title", type=str, help="Plot title")
+    parser.add_argument("-g", "--graph-type", type=str, help="Type of graph. (scatter or line)")
 
     args = parser.parse_args()
     main(args)
